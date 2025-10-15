@@ -10,7 +10,7 @@ import datetime
 
 
 def load_config():
-    config_path = Path(__file__).parents[3] / "config.yaml"
+    config_path = "/home/rteam2/m15kh/AgenticSocial/config.yaml"
     try:
         with open(config_path, 'r') as file:
             return yaml.safe_load(file)
@@ -77,7 +77,7 @@ class SocialSummarizerAPI(ls.LitAPI):
 
 
         firecrawl = FirecrawlScrapeWebsiteTool(
-            api_key='fc-069729b29ed0432c92d3539a64de1834'
+            api_key=config["firecrawl"]
         )
 
         # === Agent 1: Summarizer ===
