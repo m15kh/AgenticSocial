@@ -1,7 +1,14 @@
+import sys
+from pathlib import Path
+
+# Add scripts/src to Python path
+src_path = Path(__file__).parent
+sys.path.insert(0, str(src_path))
+
 import litserve as ls
-from scripts.src.config.loader import load_config
-from scripts.src.utils.logger import setup_logger, log_success, log_info
-from scripts.src.api.social_api import SocialSummarizerAPI
+from config.loader import load_config
+from utils.logger import setup_logger, log_success, log_info
+from api.social_api import SocialSummarizerAPI
 
 logger = setup_logger('Server')
 
