@@ -123,7 +123,10 @@ class SocialSummarizerAPI(ls.LitAPI):
             "output": output, 
             "status": output.get("status", "success")
         }
+        
+        
 class EnhancementAPI(ls.LitAPI):
+    
     def setup(self, device):
         """Setup LLM for text enhancement"""
         self.config = load_config()
