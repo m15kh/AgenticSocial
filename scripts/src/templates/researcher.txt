@@ -1,0 +1,13 @@
+Fetch and summarize the webpage at: {url}
+
+Your goal is to extract the key insights and main points from the article.
+
+INSTRUCTIONS:
+- Read the full webpage content
+- Extract the main topic and key points
+- Summarize in clear, concise paragraphs
+- Focus on factual information
+- Aim for 3-4 paragraphs
+
+EXPECTED OUTPUT:
+A clear, well-structured summary (3-4 paragraphs) covering the main ideas.

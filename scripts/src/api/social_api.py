@@ -13,12 +13,17 @@ from scripts.src.agents.telegram_poster import create_telegram_poster
 from scripts.src.tasks.summarize import create_summarize_task
 from scripts.src.tasks.social import create_social_task
 from scripts.src.tasks.telegram import create_telegram_task
+        
+# Add this import at the top
+from fastapi import FastAPI
+import litserve as ls
+
 
 logger = setup_logger('API')
 
 
 class SocialSummarizerAPI(ls.LitAPI):
-    
+        
     def setup(self, device):
         """Setup the API with agents and tasks"""
         # Load configuration
@@ -113,3 +118,82 @@ class SocialSummarizerAPI(ls.LitAPI):
             "output": output, 
             "status": output.get("status", "success")
         }
+class EnhancementAPI(ls.LitAPI):
+    def setup(self, device):
+        """Setup LLM for text enhancement"""
+        self.config = load_config()
+        
+        if self.config['llm']['provider'] == 'openai':
+            self.llm = LLM(
+                model=self.config['llm']['model'],
+                api_key=self.config['llm']['api_key']
+            )
+        else:
+            self.llm = LLM(
+                model=f"ollama/{self.config['llm']['model']}",
+                base_url=self.config["llm"]["base_url"],
+            )
+
+    def decode_request(self, request):
+        return request["text"]
+
+    def predict(self, text: str):
+    """Enhance user's text with AI"""
+    from crewai import Agent, Task, Crew
+    from scripts.src.utils.link_analyzer import analyze_link
+    from scripts.src.utils.template_loader import template_loader
+    import re
+    
+    # Find URLs and analyze
+    url_pattern = r'https?://[^\s]+'
+    urls = re.findall(url_pattern, text)
+    
+    link_context = ""
+    for url in urls:
+        info = analyze_link(url, self.config.get('firecrawl', ''))
+        if info.get('description'):
+            link_context += f"\nLink: {url}\nTitle: {info['title']}\nDescription: {info['description']}\n"
+    
+    # Get social links
+    social_links = self.config.get('social', {})
+    
+    # Create agent
+    enhancer = Agent(
+        role="Social Media Content Editor",
+        goal="Transform rough text into engaging, polished social media posts",
+        backstory="You're an expert social media editor.",
+        llm=self.llm,
+        verbose=False
+    )
+    
+    # Load template with variables
+    if link_context:
+        link_section = f"ADDITIONAL CONTEXT ABOUT LINKS:\n{link_context}\n\nUse this information to write engaging descriptions."
+    else:
+        link_section = ""
+    
+    description = template_loader.load(
+        'enhancer',
+        user_text=text,
+        link_context=link_section,
+        twitter_url=social_links.get('twitter', ''),
+        linkedin_url=social_links.get('linkedin', ''),
+        youtube_url=social_links.get('youtube', ''),
+        telegram_url=social_links.get('telegram_public', '')
+    )
+    
+    # Create task
+    task = Task(
+        description=description,
+        agent=enhancer,
+        expected_output="Polished social media post"
+    )
+    
+    # Run
+    crew = Crew(agents=[enhancer], tasks=[task], verbose=False)
+    result = crew.kickoff()
+    
+    return {"enhanced_text": str(result)}
+
+    def encode_response(self, output):
+        return output

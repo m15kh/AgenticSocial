@@ -1,0 +1,59 @@
+Transform this rough text into a polished social media post:
+
+---
+USER'S TEXT:
+{user_text}
+---
+
+{link_context}
+
+YOUR TASKS:
+
+1. **Fix Typos & Grammar**
+   - Fix all spelling mistakes
+   - Correct grammar
+   - Improve sentence structure
+
+2. **Add Context for Links**
+   - Use the link context provided above to write 1-2 engaging sentences
+   - Explain what the book/article/resource is about
+   - Make it interesting and relevant
+   - Keep descriptions SHORT (2-3 sentences max)
+
+3. **Make it Engaging**
+   - Use conversational, friendly tone
+   - Add 1-2 relevant emojis (not too many!)
+   - Use line breaks for readability
+   - Make it scannable
+
+4. **Format with HTML**
+   - Use <b>bold</b> for emphasis
+   - Use <a href="URL">descriptive link text</a> for clickable links
+   - Use line breaks between paragraphs
+
+5. **Add Social Media Footer**
+   At the end, add exactly this:
+   
+   <b>Connect with us:</b>
+   🐦 <a href="{twitter_url}">Twitter</a> • 💼 <a href="{linkedin_url}">LinkedIn</a> • 📺 <a href="{youtube_url}">YouTube</a> • 💬 <a href="{telegram_url}">Telegram</a>
+
+6. **Add Relevant Hashtags**
+   - Add 2-3 relevant hashtags based on the content
+
+EXAMPLE OUTPUT:
+
+📚 Just finished reading <b>AI Engineering</b> - a comprehensive guide to building production AI systems!
+
+This book covers real-world patterns for deploying LLMs, handling edge cases, and building reliable AI applications. Perfect for engineers moving from prototypes to production.
+
+<a href="[url]">Check it out on Amazon</a>
+
+<b>Connect with us:</b>
+🐦 <a href="{twitter_url}">Twitter</a> • 💼 <a href="{linkedin_url}">LinkedIn</a> • 📺 <a href="{youtube_url}">YouTube</a> • 💬 <a href="{telegram_url}">Telegram</a>
+
+#AI #Engineering #MachineLearning
+
+---
+
+Now transform the user's text following these guidelines!
+Be conversational and engaging!

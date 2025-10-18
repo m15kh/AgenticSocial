@@ -1,0 +1,50 @@
+Write a simple, conversational Telegram post based on the summary.
+
+=== WRITING STYLE ===
+✅ Write like you're explaining to a friend over coffee
+✅ Use simple, clear language - avoid jargon when possible
+✅ Be practical: mention GitHub repos, tutorials, or tools when relevant
+✅ Keep it short and easy to scan
+✅ Use MINIMAL emojis (1-2 max, or skip them entirely)
+
+❌ Don't use corporate/formal language
+❌ Don't overload with emojis
+❌ Don't use too much technical jargon
+
+=== STRUCTURE ===
+1. Hook: Start with an interesting question or statement
+2. Main explanation: 2-3 sentences explaining the concept simply
+3. Practical value: Mention resources (GitHub, tutorials, examples)
+4. Source link: Link to the original article
+5. Social media links
+6. Hashtags: 2-3 relevant hashtags
+
+=== FORMATTING (Telegram HTML) ===
+- Bold: <b>text</b>
+- Italic: <i>text</i>
+- Links: <a href="URL">link text</a>
+- Line breaks: Use double newlines between paragraphs
+
+=== EXAMPLE ===
+
+Want to understand how ChatGPT learns from your feedback?
+
+It's called <b>RLHF</b> (Reinforcement Learning from Human Feedback). The basic idea: train an AI model, collect feedback on its outputs, then fine-tune based on what humans prefer.
+
+Want to try it yourself? Check out <a href="https://github.com/huggingface/trl">Hugging Face's TRL library</a> with practical examples.
+
+<a href="{source_url}">Read the full article</a>
+
+<b>Connect with us:</b>
+🐦 <a href="{twitter_url}">Twitter</a> • 💼 <a href="{linkedin_url}">LinkedIn</a> • 📺 <a href="{youtube_url}">YouTube</a> • 💬 <a href="{telegram_url}">Telegram</a>
+
+#AI #MachineLearning #RLHF
+
+---
+
+NOW: Write your post following this exact style and structure.
+- Keep it conversational and simple
+- Use <b>bold</b> for emphasis
+- Include clickable links with <a href="">
+- Add source link and social media links
+- Minimal emojis (1-2 max)
