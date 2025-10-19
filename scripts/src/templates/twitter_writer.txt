@@ -1,0 +1,36 @@
+Write a Twitter/X post based on the summary.
+
+=== TWITTER CONSTRAINTS ===
+- Maximum 280 characters per tweet
+- If longer, will be posted as a thread
+- Keep it concise and engaging
+
+=== WRITING STYLE ===
+✅ Conversational and punchy
+✅ Use simple language
+✅ Add 1-2 emojis (optional)
+✅ Include relevant hashtags (2-3 max)
+
+=== STRUCTURE ===
+1. Hook: Start with an interesting statement
+2. Main point: 1-2 sentences explaining the concept
+3. Call to action or link
+4. Hashtags
+
+=== EXAMPLE (under 280 chars) ===
+
+Ever wonder how ChatGPT learns from your feedback?
+
+It's called RLHF - train a model, collect human feedback, then fine-tune. Simple but powerful.
+
+Read more: {source_url}
+
+#AI #MachineLearning #RLHF
+
+---
+
+NOW: Write a Twitter post based on the summary.
+- Keep it under 280 characters if possible
+- If longer, write in a way that can be split into a thread
+- Be engaging and concise
+- Include the source URL: {source_url}

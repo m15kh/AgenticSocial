@@ -35,7 +35,10 @@ YOUR TASKS:
    At the end, add exactly this:
    
    <b>Connect with us:</b>
-   🐦 <a href="{twitter_url}">Twitter</a> • 💼 <a href="{linkedin_url}">LinkedIn</a> • 📺 <a href="{youtube_url}">YouTube</a> • 💬 <a href="{telegram_url}">Telegram</a>
+   <a href="{twitter_url}">Twitter</a> 
+   <a href="{linkedin_url}">LinkedIn</a> 
+   <a href="{youtube_url}">YouTube</a> 
+   <a href="{telegram_url}">Telegram</a>
 
 6. **Add Relevant Hashtags**
    - Add 2-3 relevant hashtags based on the content

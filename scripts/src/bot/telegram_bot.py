@@ -316,7 +316,7 @@ class ContentBot:
                             await context.bot.send_message(
                                 chat_id=self.config['telegram']['channel_id'],
                                 text=chunk,
-                                parse_mode='HTML',
+                                parse_mode='MarkdownV2',  # Changed from HTML to MarkdownV2
                                 disable_web_page_preview=False
                             )
                     else:

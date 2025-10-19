@@ -48,43 +48,89 @@ class SocialSummarizerAPI(ls.LitAPI):
         return request["url"]
 
     def predict(self, url: str):
-        """Process URL, generate content, and post to Telegram"""
+        """Process URL, generate content, and post to Telegram AND Twitter"""
         log_warning(logger, f"Processing URL: {url}")
         
         try:
             # Initialize tools
+            from scripts.src.tools.web_scraper import WebScraperTool
+            from scripts.src.tools.telegram_poster import TelegramPosterTool
+            from scripts.src.tools.twitter_poster import TwitterPosterTool
+            
             web_scraper = WebScraperTool()
             telegram_poster = TelegramPosterTool()
+            twitter_poster = TwitterPosterTool()
             
             # Create agents
+            from scripts.src.agents.researcher import create_researcher
+            from scripts.src.agents.writer import create_writer
+            from scripts.src.agents.telegram_poster import create_telegram_poster
+            from scripts.src.agents.twitter_poster import create_twitter_poster
+            
             researcher = create_researcher(self.llm, [web_scraper])
-            writer = create_writer(self.llm)
+            telegram_writer = create_writer(self.llm)
+            twitter_writer = create_writer(self.llm)  # Separate writer for Twitter
             telegram_agent = create_telegram_poster(self.llm, [telegram_poster])
+            twitter_agent = create_twitter_poster(self.llm, [twitter_poster])
             
             # Get social links from config
             social_links = self.config.get('social', {})
             
             # Create tasks
-            summarize_task = create_summarize_task(researcher)
+            from scripts.src.tasks.summarize import create_summarize_task
+            from scripts.src.tasks.social import create_social_task
+            from scripts.src.tasks.telegram import create_telegram_task
+            from scripts.src.tasks.twitter import create_twitter_task
+            from scripts.src.utils.template_loader import template_loader
+            from crewai import Task
             
-            social_task = create_social_task(
-                writer, 
+            # 1. Summarize
+            summarize_task = create_summarize_task(researcher, url)
+            
+            # 2. Write Telegram post
+            telegram_social_task = create_social_task(
+                telegram_writer, 
                 [summarize_task], 
                 source_url=url,
-                social_links=social_links  # Pass all social links
+                social_links=social_links
             )
             
-            telegram_task = create_telegram_task(
+            # 3. Write Twitter post
+            twitter_description = template_loader.load(
+                'twitter_writer',
+                source_url=url
+            )
+            
+            twitter_social_task = Task(
+                description=twitter_description,
+                agent=twitter_writer,
+                expected_output="A concise Twitter post under 280 characters with hashtags",
+                context=[summarize_task]
+            )
+            
+            # 4. Post to Telegram
+            telegram_post_task = create_telegram_task(
                 telegram_agent, 
-                [social_task],
+                [telegram_social_task],
                 self.config['telegram']['bot_token'],
                 self.config['telegram']['channel_id']
             )
             
-            # Create crew
+            # 5. Post to Twitter
+            twitter_post_task = create_twitter_task(
+                twitter_agent,
+                [twitter_social_task],
+                self.config['twitter']['api_key'],
+                self.config['twitter']['api_secret'],
+                self.config['twitter']['access_token'],
+                self.config['twitter']['access_token_secret']
+            )
+            
+            # Create crew with all agents
             crew = Crew(
-                agents=[researcher, writer, telegram_agent],
-                tasks=[summarize_task, social_task, telegram_task],
+                agents=[researcher, telegram_writer, twitter_writer, telegram_agent, twitter_agent],
+                tasks=[summarize_task, telegram_social_task, twitter_social_task, 
+                    telegram_post_task, twitter_post_task],
                 verbose=True,
             )
             
@@ -98,17 +144,18 @@ class SocialSummarizerAPI(ls.LitAPI):
                 "url": url,
                 "timestamp": datetime.datetime.now().isoformat(),
                 "result": str(result),
-                "status": "success"
+                "status": "success",
+                "posted_to": ["telegram", "twitter"]
             }
             
             # Save results
             saved_path = save_results(url, output)
             output["saved_to"] = str(saved_path)
             
-            log_success(logger, f"Successfully processed URL and posted to Telegram!")
+            log_success(logger, f"Successfully processed URL and posted to Telegram AND Twitter!")
             
             return output
-            
+        
         except Exception as e:
             log_error(logger, f"Error processing URL: {str(e)}")
             return {
@@ -117,6 +164,7 @@ class SocialSummarizerAPI(ls.LitAPI):
                 "error": str(e),
                 "status": "failed"
             }
+        
     def encode_response(self, output):
         """Encode response for API"""
         return {
