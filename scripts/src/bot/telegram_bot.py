@@ -5,11 +5,27 @@ import requests
 import logging
 import tempfile
 import os
+from colorama import Fore, Back, Style, init
 
 from config.loader import load_config
 from utils.logger import setup_logger
 
+# Initialize colorama for cross-platform colored terminal output
+init(autoreset=True)
+
+# Set up the logger with color support
 logger = setup_logger('TelegramBot')
+
+# Define color codes for different log levels
+DEBUG_COLOR = Fore.CYAN
+INFO_COLOR = Fore.GREEN
+WARNING_COLOR = Fore.YELLOW
+ERROR_COLOR = Fore.RED
+CRITICAL_COLOR = Fore.RED + Back.WHITE
+
+# Debug function with color
+def colorized_debug(message, color=DEBUG_COLOR):
+    logger.debug(f"{color}{message}{Style.RESET_ALL}")
 
 
 class ContentBot:
@@ -19,9 +35,11 @@ class ContentBot:
         self.enhance_url = f"http://{self.config['server']['host']}:{self.config['server']['port']}/enhance"
         self.bot_token = self.config['telegram']['bot_token']
         self.pending_posts = {}  # Store pending posts for confirmation
+        colorized_debug("ContentBot initialized", INFO_COLOR)
         
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Send welcome message"""
+        colorized_debug(f"Start command received from user: {update.effective_user.id}", INFO_COLOR)
         await update.message.reply_text(
             "👋 Hi! I can help you in three ways:\n\n"
             "🔗 <b>Option 1: Auto-post from URL</b>\n"
@@ -43,6 +61,7 @@ class ContentBot:
     
     async def help_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Send help message"""
+        colorized_debug(f"Help command received from user: {update.effective_user.id}", INFO_COLOR)
         await update.message.reply_text(
             "📚 <b>How to use:</b>\n\n"
             "<b>For URL auto-posting:</b>\n"
@@ -65,16 +84,21 @@ class ContentBot:
     async def handle_text(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle text messages - either URLs or text to enhance"""
         text = update.message.text.strip()
+        user_id = update.effective_user.id
+        colorized_debug(f"Text received from user {user_id}: {text[:30]}...", DEBUG_COLOR)
         
         # Check if it's a URL
         if text.startswith(('http://', 'https://')):
+            colorized_debug(f"Processing as URL: {text[:50]}...", DEBUG_COLOR)
             await self.handle_url_processing(update, context, text)
         else:
             # It's regular text to enhance
+            colorized_debug(f"Processing as regular text: {text[:50]}...", DEBUG_COLOR)
             await self.handle_text_enhancement(update, context, text)
     
     async def handle_url_processing(self, update: Update, context: ContextTypes.DEFAULT_TYPE, url: str):
         """Process URL and post automatically"""
+        colorized_debug(f"URL processing started for: {url[:50]}...", DEBUG_COLOR)
         # Send processing message
         processing_msg = await update.message.reply_text(
             f"🔄 Processing URL...\n\n"
@@ -85,6 +109,7 @@ class ContentBot:
         
         try:
             # Call your API
+            colorized_debug(f"Making API request to {self.api_url}", DEBUG_COLOR)
             response = requests.post(
                 self.api_url,
                 json={"url": url},
@@ -92,6 +117,7 @@ class ContentBot:
             )
             
             if response.status_code == 200:
+                colorized_debug(f"URL processed successfully: {url[:50]}...", INFO_COLOR)
                 await processing_msg.edit_text(
                     f"✅ <b>Success!</b>\n\n"
                     f"URL: <code>{url}</code>\n"
@@ -99,6 +125,7 @@ class ContentBot:
                     parse_mode='HTML'
                 )
             else:
+                colorized_debug(f"API error {response.status_code} for URL: {url[:50]}...", ERROR_COLOR)
                 await processing_msg.edit_text(
                     f"❌ <b>Error:</b> {response.status_code}\n\n"
                     f"Something went wrong. Please try again.",
@@ -106,13 +133,17 @@ class ContentBot:
                 )
                 
         except requests.exceptions.Timeout:
+            colorized_debug(f"Timeout error for URL: {url[:50]}...", ERROR_COLOR)
             await processing_msg.edit_text("⏱️ Request timed out. The URL might be too slow to load.")
         except Exception as e:
+            colorized_debug(f"Error processing URL: {str(e)}", ERROR_COLOR)
             logger.error(f"Error processing URL: {str(e)}")
             await processing_msg.edit_text(f"❌ Error: {str(e)}")
     
     async def handle_text_enhancement(self, update: Update, context: ContextTypes.DEFAULT_TYPE, text: str):
         """Enhance regular text and ask for confirmation"""
+        user_id = update.effective_user.id
+        colorized_debug(f"Text enhancement started for user {user_id}", DEBUG_COLOR)
         # Send processing message
         processing_msg = await update.message.reply_text(
             "🤖 Enhancing your text with AI...\n"
@@ -121,6 +152,7 @@ class ContentBot:
         
         try:
             # Enhance the text using your LLM
+            colorized_debug(f"Calling enhance API for text of length {len(text)}", DEBUG_COLOR)
             enhanced_text = await self.enhance_text(text)
             
             # Check length
@@ -136,6 +168,7 @@ class ContentBot:
                 'user_id': update.effective_user.id,
                 'type': 'text_only'  # Mark as text-only post
             }
+            colorized_debug(f"Created pending text post with ID: {post_id}", DEBUG_COLOR)
             
             # Show preview with confirmation buttons
             keyboard = [
@@ -169,14 +202,18 @@ class ContentBot:
             await processing_msg.delete()
             
         except Exception as e:
+            colorized_debug(f"Error enhancing text: {str(e)}", ERROR_COLOR)
             logger.error(f"Error enhancing text: {str(e)}")
             await processing_msg.edit_text(f"❌ Error: {str(e)}")
     
     async def handle_photo(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle photo messages with captions"""
         caption = update.message.caption or ""
+        user_id = update.effective_user.id
+        colorized_debug(f"Photo received from user {user_id} with caption length: {len(caption)}", DEBUG_COLOR)
         
         if not caption.strip():
+            colorized_debug(f"Empty caption from user {user_id}", WARNING_COLOR)
             await update.message.reply_text(
                 "⚠️ Please add a caption to your image describing what you want to post!"
             )
@@ -214,6 +251,7 @@ class ContentBot:
                 'user_id': update.effective_user.id,
                 'type': 'photo'  # Mark as photo post
             }
+            colorized_debug(f"Created pending photo post with ID: {post_id}", DEBUG_COLOR)
             
             # Show preview with confirmation buttons
             keyboard = [
@@ -256,6 +294,7 @@ class ContentBot:
     
     async def enhance_text(self, text: str) -> str:
         """Enhance text using LLM API"""
+        colorized_debug(f"Enhancing text of length: {len(text)}", DEBUG_COLOR)
         try:
             response = requests.post(
                 self.enhance_url,
@@ -265,12 +304,16 @@ class ContentBot:
             
             if response.status_code == 200:
                 result = response.json()
-                return result.get('enhanced_text', text)
+                enhanced_text = result.get('enhanced_text', text)
+                colorized_debug(f"Text enhanced successfully. New length: {len(enhanced_text)}", INFO_COLOR)
+                return enhanced_text
             else:
+                colorized_debug(f"Enhancement API error: {response.status_code}", ERROR_COLOR)
                 logger.error(f"Enhancement API error: {response.status_code}")
                 return text
                 
         except Exception as e:
+            colorized_debug(f"Error calling enhancement API: {str(e)}", ERROR_COLOR)
             logger.error(f"Error calling enhancement API: {str(e)}")
             return text
     
@@ -280,8 +323,10 @@ class ContentBot:
         await query.answer()
         
         action, post_id = query.data.split('_', 1)
+        colorized_debug(f"Callback received: {action} for post {post_id}", DEBUG_COLOR)
         
         if post_id not in self.pending_posts:
+            colorized_debug(f"Post {post_id} not found in pending posts", WARNING_COLOR)
             try:
                 await query.message.edit_text("⚠️ This post has expired. Please send it again.")
             except:
@@ -398,6 +443,7 @@ class ContentBot:
     
     def run(self):
         """Run the bot"""
+        colorized_debug("Starting Telegram bot...", INFO_COLOR)
         logger.info("Starting Telegram bot...")
         
         # Create application
@@ -411,10 +457,12 @@ class ContentBot:
         application.add_handler(CallbackQueryHandler(self.handle_callback))
         
         # Run bot
+        colorized_debug("Bot is running! Send URLs, text, or photos to process.", INFO_COLOR)
         logger.info("Bot is running! Send URLs, text, or photos to process.")
         application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
 if __name__ == "__main__":
+    colorized_debug("Initializing ContentBot", INFO_COLOR)
     bot = ContentBot()
     bot.run()

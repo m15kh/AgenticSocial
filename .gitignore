@@ -3,3 +3,4 @@ data/
 __pycache__/
 tst_x.py
 tst_teleg.py
+get_linkedin.py
