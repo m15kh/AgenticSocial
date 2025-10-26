@@ -1,0 +1,34 @@
+Analyze the content and generate effective hashtags.
+
+=== CONTENT TO ANALYZE ===
+{content_summary}
+
+=== TARGET PLATFORM ===
+{platform}
+
+=== HASHTAG REQUIREMENTS ===
+{requirements}
+
+=== YOUR TASK ===
+Generate relevant hashtags that will:
+1. Increase discoverability
+2. Reach the right audience  
+3. Encourage engagement
+4. Align with trending topics
+
+Consider:
+- Main topics and keywords
+- Industry trends (AI, ML, tech)
+- Platform best practices
+- Community hashtags
+
+=== OUTPUT ===
+List hashtags with reasoning:
+
+**Recommended Hashtags:**
+#HashtagOne
+#HashtagTwo  
+#HashtagThree
+
+**Why these hashtags:**
+[Brief 1-2 sentence explanation]

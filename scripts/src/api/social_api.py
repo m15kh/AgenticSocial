@@ -46,9 +46,9 @@ class SocialSummarizerAPI(ls.LitAPI):
     def decode_request(self, request):
         """Decode incoming request"""
         return request["url"]
-    
+        
     def predict(self, url: str):
-        """Process URL, generate content, and post to Telegram, Twitter, AND LinkedIn"""
+        """Process URL, generate content with hashtags, and post to all platforms"""
         log_warning(logger, f"Processing URL: {url}")
         
         try:
@@ -66,6 +66,7 @@ class SocialSummarizerAPI(ls.LitAPI):
             # Create agents
             from scripts.src.agents.researcher import create_researcher
             from scripts.src.agents.writer import create_writer
+            from scripts.src.agents.hashtag_generator import create_hashtag_generator
             from scripts.src.agents.telegram_poster import create_telegram_poster
             from scripts.src.agents.twitter_poster import create_twitter_poster
             from scripts.src.agents.linkedin_poster import create_linkedin_poster
@@ -74,6 +75,7 @@ class SocialSummarizerAPI(ls.LitAPI):
             telegram_writer = create_writer(self.llm)
             twitter_writer = create_writer(self.llm)
             linkedin_writer = create_writer(self.llm)
+            hashtag_agent = create_hashtag_generator(self.llm)  # NEW!
             telegram_agent = create_telegram_poster(self.llm, [telegram_poster])
             twitter_agent = create_twitter_poster(self.llm, [twitter_poster])
             linkedin_agent = create_linkedin_poster(self.llm, [linkedin_poster])
@@ -84,6 +86,7 @@ class SocialSummarizerAPI(ls.LitAPI):
             # Create tasks
             from scripts.src.tasks.summarize import create_summarize_task
             from scripts.src.tasks.social import create_social_task
+            from scripts.src.tasks.hashtag import create_hashtag_task
             from scripts.src.tasks.telegram import create_telegram_task
             from scripts.src.tasks.twitter import create_twitter_task
             from scripts.src.tasks.linkedin import create_linkedin_task
@@ -93,33 +96,50 @@ class SocialSummarizerAPI(ls.LitAPI):
             # 1. Summarize
             summarize_task = create_summarize_task(researcher, url)
             
-            # 2. Write Telegram post
+            # 2. Generate hashtags for each platform
+            twitter_hashtag_task = create_hashtag_task(
+                hashtag_agent,
+                [summarize_task],
+                platform="twitter"
+            )
+            
+            linkedin_hashtag_task = create_hashtag_task(
+                hashtag_agent,
+                [summarize_task],
+                platform="linkedin"
+            )
+            
+            telegram_hashtag_task = create_hashtag_task(
+                hashtag_agent,
+                [summarize_task],
+                platform="telegram"
+            )
+            
+            # 3. Write posts (now including hashtags from context)
             telegram_social_task = create_social_task(
                 telegram_writer, 
-                [summarize_task], 
+                [summarize_task, telegram_hashtag_task],  # Include hashtags
                 source_url=url,
                 social_links=social_links
             )
             
-            # 3. Write Twitter post
             twitter_description = template_loader.load('twitter_writer', source_url=url)
             twitter_social_task = Task(
                 description=twitter_description,
                 agent=twitter_writer,
-                expected_output="A concise Twitter post under 280 characters",
-                context=[summarize_task]
+                expected_output="A concise Twitter post under 280 characters with hashtags",
+                context=[summarize_task, twitter_hashtag_task]  # Include hashtags
             )
             
-            # 4. Write LinkedIn post
             linkedin_description = template_loader.load('linkedin_writer', source_url=url)
             linkedin_social_task = Task(
                 description=linkedin_description,
                 agent=linkedin_writer,
-                expected_output="A professional LinkedIn post with insights",
-                context=[summarize_task]
+                expected_output="A professional LinkedIn post with insights and hashtags",
+                context=[summarize_task, linkedin_hashtag_task]  # Include hashtags
             )
             
-            # 5. Post to Telegram
+            # 4. Post to platforms
             telegram_post_task = create_telegram_task(
                 telegram_agent, 
                 [telegram_social_task],
@@ -127,7 +147,6 @@ class SocialSummarizerAPI(ls.LitAPI):
                 self.config['telegram']['channel_id']
             )
             
-            # 6. Post to Twitter
             twitter_post_task = create_twitter_task(
                 twitter_agent,
                 [twitter_social_task],
@@ -137,7 +156,6 @@ class SocialSummarizerAPI(ls.LitAPI):
                 self.config['twitter']['access_token_secret']
             )
             
-            # 7. Post to LinkedIn
             linkedin_post_task = create_linkedin_task(
                 linkedin_agent,
                 [linkedin_social_task],
@@ -149,6 +167,7 @@ class SocialSummarizerAPI(ls.LitAPI):
             crew = Crew(
                 agents=[
                     researcher, 
+                    hashtag_agent,  # NEW!
                     telegram_writer, 
                     twitter_writer, 
                     linkedin_writer,
@@ -157,7 +176,10 @@ class SocialSummarizerAPI(ls.LitAPI):
                     linkedin_agent
                 ],
                 tasks=[
-                    summarize_task, 
+                    summarize_task,
+                    twitter_hashtag_task,    # NEW!
+                    linkedin_hashtag_task,   # NEW!
+                    telegram_hashtag_task,   # NEW!
                     telegram_social_task, 
                     twitter_social_task,
                     linkedin_social_task,
@@ -186,11 +208,12 @@ class SocialSummarizerAPI(ls.LitAPI):
             saved_path = save_results(url, output)
             output["saved_to"] = str(saved_path)
             
-            log_success(logger, f"Successfully posted to Telegram, Twitter, AND LinkedIn!")
+            log_success(logger, f"Successfully posted to all platforms with optimized hashtags!")
             
             return output
             
         except Exception as e:
+            from scripts.src.utils.logger import log_error
             log_error(logger, f"Error processing URL: {str(e)}")
             return {
                 "url": url,
@@ -198,6 +221,8 @@ class SocialSummarizerAPI(ls.LitAPI):
                 "error": str(e),
                 "status": "failed"
             }
+            
+        
     def encode_response(self, output):
         """Encode response for API"""
         return {

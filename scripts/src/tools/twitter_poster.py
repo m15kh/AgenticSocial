@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field
 from typing import Type
 import tweepy
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +26,7 @@ class TwitterPosterTool(BaseTool):
              access_token: str, access_token_secret: str) -> str:
         """Post message to Twitter using API v2"""
         try:
-            # Authenticate with Twitter API v2 (same as your working code)
+            # Authenticate with Twitter API v2
             client = tweepy.Client(
                 consumer_key=api_key,
                 consumer_secret=api_secret,
@@ -42,8 +43,8 @@ class TwitterPosterTool(BaseTool):
             
             # Twitter has a 280 character limit
             if len(message) > 280:
-                # Create a thread
-                tweets = self._split_into_tweets(message)
+                # Create a thread - KEEP HASHTAGS IN FIRST TWEET
+                tweets = self._split_into_tweets_smart(message)
                 previous_tweet_id = None
                 first_tweet_id = None
                 
@@ -71,23 +72,62 @@ class TwitterPosterTool(BaseTool):
             logger.error(error_msg)
             return error_msg
     
-    def _split_into_tweets(self, text: str, max_length: int = 270) -> list:
-        """Split long text into multiple tweets"""
-        words = text.split()
+    def _split_into_tweets_smart(self, text: str, max_length: int = 270) -> list:
+        """
+        Smart split that keeps hashtags and URLs in the first tweet
+        """
+        # Extract hashtags and URLs
+        hashtags = re.findall(r'#\w+', text)
+        urls = re.findall(r'https?://[^\s]+', text)
+        
+        # Remove hashtags and URLs temporarily for splitting
+        text_without_special = text
+        for hashtag in hashtags:
+            text_without_special = text_without_special.replace(hashtag, '')
+        for url in urls:
+            text_without_special = text_without_special.replace(url, '')
+        
+        # Clean up extra spaces
+        text_without_special = ' '.join(text_without_special.split())
+        
+        # Split main content
+        words = text_without_special.split()
         tweets = []
         current_tweet = ""
         
         for word in words:
-            if len(current_tweet) + len(word) + 1 <= max_length:
+            if len(current_tweet) + len(word) + 1 <= max_length - 50:  # Leave room for hashtags/URLs
                 current_tweet += word + " "
             else:
-                tweets.append(current_tweet.strip())
+                if current_tweet:
+                    tweets.append(current_tweet.strip())
                 current_tweet = word + " "
         
         if current_tweet:
             tweets.append(current_tweet.strip())
         
-        # Add tweet numbers
+        # Add hashtags and URLs ONLY to the first tweet
+        if tweets:
+            first_tweet = tweets[0]
+            
+            # Add URLs first (higher priority)
+            for url in urls:
+                if len(first_tweet) + len(url) + 2 <= max_length:
+                    first_tweet += f"\n{url}"
+            
+            # Add hashtags if there's space
+            hashtag_str = " ".join(hashtags)
+            if len(first_tweet) + len(hashtag_str) + 2 <= max_length:
+                first_tweet += f"\n{hashtag_str}"
+            else:
+                # Try to fit as many hashtags as possible
+                for hashtag in hashtags:
+                    if len(first_tweet) + len(hashtag) + 1 <= max_length:
+                        first_tweet += f" {hashtag}"
+            
+            tweets[0] = first_tweet
+        
+        # Add tweet numbers for threads
         total = len(tweets)
         if total > 1:
             tweets = [f"{i+1}/{total} {tweet}" for i, tweet in enumerate(tweets)]

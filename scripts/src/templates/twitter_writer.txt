@@ -11,26 +11,51 @@ Write a Twitter/X post based on the summary.
 ✅ Add 1-2 emojis (optional)
 ✅ Include relevant hashtags (2-3 max)
 
+=== HASHTAG PLACEMENT (CRITICAL!) ===
+**IMPORTANT: Embed hashtags NATURALLY within the text, NOT at the end!**
+
+❌ WRONG (hashtags at end):
+"Vision Language Models are getting better! Check out the latest research.
+
+#AI #MachineLearning #VLM"
+
+✅ CORRECT (inline hashtags):
+"#VisionLanguageModels are getting better! The latest #AI research shows major improvements in multimodal understanding. 🚀"
+
+OR:
+
+"Excited about the progress in #AI and #MachineLearning! New VLM research is groundbreaking."
+
+=== RULES FOR INLINE HASHTAGS ===
+1. Replace key terms with hashtagged versions: "AI" → "#AI"
+2. Hashtag main topics naturally: "Machine Learning" → "#MachineLearning" 
+3. Keep it readable - don't hashtag every word!
+4. Use 2-3 hashtags maximum, embedded in the sentence
+5. Hashtags should be on IMPORTANT keywords, not random words
+
 === STRUCTURE ===
-1. Hook: Start with an interesting statement
-2. Main point: 1-2 sentences explaining the concept
-3. Call to action or link
-4. Hashtags
+1. Hook: Start with engaging statement (WITH inline hashtag if relevant)
+2. Main point: 1-2 sentences explaining (WITH inline hashtags on key terms)
+3. Link: Include source URL
+4. NO separate hashtag section at the end!
 
-=== EXAMPLE (under 280 chars) ===
+=== EXAMPLE (GOOD) ===
+"#VisionLanguageModels just got smarter! 🚀 New research shows they're becoming more versatile & powerful in #AI. From any-to-any modalities to advanced reasoning.
 
-Ever wonder how ChatGPT learns from your feedback?
+Learn more: {source_url}"
 
-It's called RLHF - train a model, collect human feedback, then fine-tune. Simple but powerful.
+=== EXAMPLE (BAD - Don't do this!) ===
+"Vision Language Models just got smarter! New research shows exciting progress.
 
-Read more: {source_url}
+{source_url}
 
-#AI #MachineLearning #RLHF
+#AI #MachineLearning #VLM"
 
 ---
 
-NOW: Write a Twitter post based on the summary.
-- Keep it under 280 characters if possible
-- If longer, write in a way that can be split into a thread
-- Be engaging and concise
+NOW: Write a Twitter post with INLINE hashtags embedded naturally in the text.
+- Keep under 280 characters if possible
+- Embed 2-3 hashtags within the sentence
 - Include the source URL: {source_url}
+- Be engaging and concise
+- NO hashtag section at the end!
