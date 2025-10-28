@@ -3,3 +3,5 @@ data/
 __pycache__/
 tst_x.py
 tst_teleg.py
+*.log
+fix bug linkedin

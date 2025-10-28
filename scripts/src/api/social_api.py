@@ -1,9 +1,10 @@
 import litserve as ls
 import datetime
 from crewai import Crew, LLM
+from colorama import init, Fore, Style
 
 from scripts.src.config.loader import load_config
-from scripts.src.utils.logger import setup_logger, log_info, log_success, log_warning
+from scripts.src.utils.logger import setup_logger, setup_file_logger, log_info, log_success, log_warning
 from scripts.src.utils.storage import save_results
 from scripts.src.tools.web_scraper import WebScraperTool
 from scripts.src.tools.telegram_poster import TelegramPosterTool
@@ -33,7 +34,13 @@ class SocialSummarizerAPI(ls.LitAPI):
         """Setup the API with agents and tasks"""
         # Load configuration
         self.config = load_config()
-        log_info(logger, f"Setting up API with model: {self.config['llm']['model']}")
+        
+        # Setup logger with both console and file output
+        self.logger = setup_logger('API')
+        file_handler = setup_file_logger('social_api')
+        self.logger.addHandler(file_handler)
+        
+        log_info(self.logger, f"Setting up API with model: {self.config['llm']['model']}")
         
         # Initialize LLM
         self.llm = LLM(
@@ -41,188 +48,217 @@ class SocialSummarizerAPI(ls.LitAPI):
             base_url=self.config["llm"]["base_url"],
         )
         
-        log_success(logger, "API setup completed successfully")
+        log_success(self.logger, "API setup completed successfully")
 
     def decode_request(self, request):
         """Decode incoming request"""
         return request["url"]
-        
+            
     def predict(self, url: str):
-        """Process URL, generate content with hashtags, and post to all platforms"""
-        log_warning(logger, f"Processing URL: {url}")
+        """Process URL, generate content with hashtags, and post to platforms"""
+        log_warning(self.logger, f"Processing URL: {url}")
         
         try:
+            # Initialize colorama
+            init()
+
+            # Read platform settings from config
+            platforms = self.config.get('platforms', {})
+            telegram_enabled = platforms.get('telegram', {}).get('enabled', True)
+            twitter_enabled = platforms.get('twitter', {}).get('enabled', True)
+            linkedin_enabled = platforms.get('linkedin', {}).get('enabled', True)
+            
+            # Print colorized platform status
+            print("\n=== Platform Status ===")
+            print(f"Telegram: {Fore.GREEN if telegram_enabled else Fore.RED}{'✓ Enabled' if telegram_enabled else '✗ Disabled'}{Style.RESET_ALL}")
+            print(f"Twitter:  {Fore.GREEN if twitter_enabled else Fore.RED}{'✓ Enabled' if twitter_enabled else '✗ Disabled'}{Style.RESET_ALL}")
+            print(f"LinkedIn: {Fore.GREEN if linkedin_enabled else Fore.RED}{'✓ Enabled' if linkedin_enabled else '✗ Disabled'}{Style.RESET_ALL}")
+            print("==================\n")
+
             # Initialize tools
             from scripts.src.tools.web_scraper import WebScraperTool
-            from scripts.src.tools.telegram_poster import TelegramPosterTool
-            from scripts.src.tools.twitter_poster import TwitterPosterTool
-            from scripts.src.tools.linkedin_poster import LinkedInPosterTool
-            
             web_scraper = WebScraperTool()
-            telegram_poster = TelegramPosterTool()
-            twitter_poster = TwitterPosterTool()
-            linkedin_poster = LinkedInPosterTool()
             
-            # Create agents
+            tools = {}
+            agents = {}
+            writers = {}
+            hashtag_tasks = {}
+            social_tasks = {}
+            post_tasks = {}
+            
+            # Initialize researcher (always needed)
             from scripts.src.agents.researcher import create_researcher
-            from scripts.src.agents.writer import create_writer
-            from scripts.src.agents.hashtag_generator import create_hashtag_generator
-            from scripts.src.agents.telegram_poster import create_telegram_poster
-            from scripts.src.agents.twitter_poster import create_twitter_poster
-            from scripts.src.agents.linkedin_poster import create_linkedin_poster
-            
             researcher = create_researcher(self.llm, [web_scraper])
-            telegram_writer = create_writer(self.llm)
-            twitter_writer = create_writer(self.llm)
-            linkedin_writer = create_writer(self.llm)
-            hashtag_agent = create_hashtag_generator(self.llm)  # NEW!
-            telegram_agent = create_telegram_poster(self.llm, [telegram_poster])
-            twitter_agent = create_twitter_poster(self.llm, [twitter_poster])
-            linkedin_agent = create_linkedin_poster(self.llm, [linkedin_poster])
             
-            # Get social links
+            # Initialize hashtag agent (always needed)
+            from scripts.src.agents.hashtag_generator import create_hashtag_generator
+            from scripts.src.agents.writer import create_writer
+            hashtag_agent = create_hashtag_generator(self.llm)
+            
             social_links = self.config.get('social', {})
             
             # Create tasks
             from scripts.src.tasks.summarize import create_summarize_task
-            from scripts.src.tasks.social import create_social_task
             from scripts.src.tasks.hashtag import create_hashtag_task
-            from scripts.src.tasks.telegram import create_telegram_task
-            from scripts.src.tasks.twitter import create_twitter_task
-            from scripts.src.tasks.linkedin import create_linkedin_task
-            from scripts.src.utils.template_loader import template_loader
             from crewai import Task
             
-            # 1. Summarize
             summarize_task = create_summarize_task(researcher, url)
             
-            # 2. Generate hashtags for each platform
-            twitter_hashtag_task = create_hashtag_task(
-                hashtag_agent,
-                [summarize_task],
-                platform="twitter"
-            )
+            all_agents = [researcher, hashtag_agent]
+            all_tasks = [summarize_task]
+            posted_to = []
             
-            linkedin_hashtag_task = create_hashtag_task(
-                hashtag_agent,
-                [summarize_task],
-                platform="linkedin"
-            )
-            
-            telegram_hashtag_task = create_hashtag_task(
-                hashtag_agent,
-                [summarize_task],
-                platform="telegram"
-            )
-            
-            # 3. Write posts (now including hashtags from context)
-            telegram_social_task = create_social_task(
-                telegram_writer, 
-                [summarize_task, telegram_hashtag_task],  # Include hashtags
-                source_url=url,
-                social_links=social_links
-            )
-            
-            twitter_description = template_loader.load('twitter_writer', source_url=url)
-            twitter_social_task = Task(
-                description=twitter_description,
-                agent=twitter_writer,
-                expected_output="A concise Twitter post under 280 characters with hashtags",
-                context=[summarize_task, twitter_hashtag_task]  # Include hashtags
-            )
-            
-            linkedin_description = template_loader.load('linkedin_writer', source_url=url)
-            linkedin_social_task = Task(
-                description=linkedin_description,
-                agent=linkedin_writer,
-                expected_output="A professional LinkedIn post with insights and hashtags",
-                context=[summarize_task, linkedin_hashtag_task]  # Include hashtags
-            )
-            
-            # 4. Post to platforms
-            telegram_post_task = create_telegram_task(
-                telegram_agent, 
-                [telegram_social_task],
-                self.config['telegram']['bot_token'],
-                self.config['telegram']['channel_id']
-            )
-            
-            twitter_post_task = create_twitter_task(
-                twitter_agent,
-                [twitter_social_task],
-                self.config['twitter']['api_key'],
-                self.config['twitter']['api_secret'],
-                self.config['twitter']['access_token'],
-                self.config['twitter']['access_token_secret']
-            )
-            
-            linkedin_post_task = create_linkedin_task(
-                linkedin_agent,
-                [linkedin_social_task],
-                self.config['linkedin']['access_token'],
-                self.config['linkedin']['author_urn']
-            )
-            
-            # Create crew with all agents
-            crew = Crew(
-                agents=[
-                    researcher, 
-                    hashtag_agent,  # NEW!
+            # ===== TELEGRAM =====
+            if telegram_enabled:
+                from scripts.src.tools.telegram_poster import TelegramPosterTool
+                from scripts.src.agents.telegram_poster import create_telegram_poster
+                from scripts.src.tasks.social import create_social_task
+                from scripts.src.tasks.telegram import create_telegram_task
+                
+                telegram_poster = TelegramPosterTool()
+                telegram_writer = create_writer(self.llm)
+                telegram_agent = create_telegram_poster(self.llm, [telegram_poster])
+                
+                telegram_hashtag_task = create_hashtag_task(
+                    hashtag_agent, [summarize_task], platform="telegram"
+                )
+                
+                telegram_social_task = create_social_task(
                     telegram_writer, 
-                    twitter_writer, 
-                    linkedin_writer,
-                    telegram_agent, 
+                    [summarize_task, telegram_hashtag_task],
+                    source_url=url,
+                    social_links=social_links
+                )
+                
+                telegram_post_task = create_telegram_task(
+                    telegram_agent,
+                    [telegram_social_task],
+                    self.config['telegram']['bot_token'],
+                    self.config['telegram']['channel_id']
+                )
+                
+                all_agents.extend([telegram_writer, telegram_agent])
+                all_tasks.extend([
+                    telegram_hashtag_task,
+                    telegram_social_task,
+                    telegram_post_task
+                ])
+                posted_to.append("telegram")
+            
+            # ===== TWITTER =====
+            if twitter_enabled:
+                from scripts.src.tools.twitter_poster import TwitterPosterTool
+                from scripts.src.agents.twitter_poster import create_twitter_poster
+                from scripts.src.tasks.twitter import create_twitter_task
+                from scripts.src.utils.template_loader import template_loader
+                
+                twitter_poster = TwitterPosterTool()
+                twitter_writer = create_writer(self.llm)
+                twitter_agent = create_twitter_poster(self.llm, [twitter_poster])
+                
+                twitter_hashtag_task = create_hashtag_task(
+                    hashtag_agent, [summarize_task], platform="twitter"
+                )
+                
+                twitter_description = template_loader.load('twitter_writer', source_url=url)
+                twitter_social_task = Task(
+                    description=twitter_description,
+                    agent=twitter_writer,
+                    expected_output="A concise Twitter post",
+                    context=[summarize_task, twitter_hashtag_task]
+                )
+                
+                twitter_post_task = create_twitter_task(
                     twitter_agent,
-                    linkedin_agent
-                ],
-                tasks=[
-                    summarize_task,
-                    twitter_hashtag_task,    # NEW!
-                    linkedin_hashtag_task,   # NEW!
-                    telegram_hashtag_task,   # NEW!
-                    telegram_social_task, 
+                    [twitter_social_task],
+                    self.config['twitter']['api_key'],
+                    self.config['twitter']['api_secret'],
+                    self.config['twitter']['access_token'],
+                    self.config['twitter']['access_token_secret']
+                )
+                
+                all_agents.extend([twitter_writer, twitter_agent])
+                all_tasks.extend([
+                    twitter_hashtag_task,
                     twitter_social_task,
+                    twitter_post_task
+                ])
+                posted_to.append("twitter")
+            
+            # ===== LINKEDIN =====
+            if linkedin_enabled: #BUG
+                from scripts.src.tools.linkedin_poster import LinkedInPosterTool
+                from scripts.src.agents.linkedin_poster import create_linkedin_poster
+                from scripts.src.tasks.linkedin import create_linkedin_task
+                from scripts.src.utils.template_loader import template_loader
+                
+                linkedin_poster = LinkedInPosterTool()
+                linkedin_writer = create_writer(self.llm)
+                linkedin_agent = create_linkedin_poster(self.llm, [linkedin_poster])
+                
+                linkedin_hashtag_task = create_hashtag_task(
+                    hashtag_agent, [summarize_task], platform="linkedin"
+                )
+                
+                linkedin_description = template_loader.load('linkedin_writer', source_url=url)
+                
+                linkedin_social_task = Task(
+                    description=linkedin_description,
+                    agent=linkedin_writer,
+                    expected_output="A professional LinkedIn post",
+                    context=[summarize_task, linkedin_hashtag_task]
+                )
+                
+                linkedin_post_task = create_linkedin_task(
+                    linkedin_agent,
+                    [linkedin_social_task],
+                    self.config['linkedin']['access_token'],
+                    self.config['linkedin']['author_urn']
+                )
+                
+                all_agents.extend([linkedin_writer, linkedin_agent])
+                all_tasks.extend([
+                    linkedin_hashtag_task,
                     linkedin_social_task,
-                    telegram_post_task, 
-                    twitter_post_task,
                     linkedin_post_task
-                ],
+                ])
+                posted_to.append("linkedin")
+            
+            # Create crew with enabled platforms only
+            crew = Crew(
+                agents=all_agents,
+                tasks=all_tasks,
                 verbose=True,
             )
             
-            log_info(logger, "Starting crew execution...")
+            log_info(self.logger, f"Starting crew execution for: {', '.join(posted_to)}...")
             
-            # Execute
             result = crew.kickoff(inputs={"url": url})
             
-            # Format output
             output = {
                 "url": url,
                 "timestamp": datetime.datetime.now().isoformat(),
                 "result": str(result),
                 "status": "success",
-                "posted_to": ["telegram", "twitter", "linkedin"]
+                "posted_to": posted_to
             }
             
-            # Save results
             saved_path = save_results(url, output)
             output["saved_to"] = str(saved_path)
             
-            log_success(logger, f"Successfully posted to all platforms with optimized hashtags!")
+            log_success(self.logger, f"Successfully posted to: {', '.join(posted_to)}!")
             
             return output
             
         except Exception as e:
             from scripts.src.utils.logger import log_error
-            log_error(logger, f"Error processing URL: {str(e)}")
+            log_error(self.logger, f"Error processing URL: {str(e)}")
             return {
                 "url": url,
                 "timestamp": datetime.datetime.now().isoformat(),
                 "error": str(e),
                 "status": "failed"
             }
-            
-        
     def encode_response(self, output):
         """Encode response for API"""
         return {
@@ -235,7 +271,13 @@ class EnhancementAPI(ls.LitAPI):
     
     def setup(self, device):
         """Setup LLM for text enhancement"""
+        # Setup logger with both console and file output
+        self.logger = setup_logger('EnhancementAPI')
+        file_handler = setup_file_logger('enhancement_api')
+        self.logger.addHandler(file_handler)
+        
         self.config = load_config()
+        log_info(self.logger, "Setting up Enhancement API")
         
         if self.config['llm']['provider'] == 'openai':
             self.llm = LLM(
@@ -253,6 +295,7 @@ class EnhancementAPI(ls.LitAPI):
 
     def predict(self, text: str):
         """Enhance user's text with AI"""
+        log_info(self.logger, "Processing text enhancement request")
 
         # Find URLs and analyze
         url_pattern = r'https?://[^\s]+'

@@ -1,5 +1,7 @@
 import logging
 from colorama import Fore, Style, init
+from logging.handlers import RotatingFileHandler
+import os
 
 # Initialize colorama
 init(autoreset=True)
@@ -27,6 +29,28 @@ def setup_logger(name='AgenticSocial'):
     logger.addHandler(ch)
     
     return logger
+
+def setup_file_logger(name, log_dir='logs'):
+    """Setup a file logger that writes to a text file"""
+    # Create logs directory if it doesn't exist
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+    
+    # Create file handler
+    log_file = os.path.join(log_dir, f'{name}.log')
+    file_handler = RotatingFileHandler(
+        log_file,
+        maxBytes=1024 * 1024,  # 1MB
+        backupCount=5
+    )
+    
+    # Set format
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    file_handler.setFormatter(formatter)
+    
+    return file_handler
 
 def log_info(logger, message):
     """Log info message with color"""
