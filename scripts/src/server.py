@@ -1,9 +1,9 @@
 import sys
 from pathlib import Path
 
-# Add scripts/src to path
-src_path = Path(__file__).parent
-sys.path.insert(0, str(src_path))
+# Add the project root directory to Python's path
+project_root = Path(__file__).parents[3]
+sys.path.insert(0, str(project_root))
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
