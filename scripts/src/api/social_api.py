@@ -4,7 +4,7 @@ from crewai import Crew, LLM
 from colorama import init, Fore, Style
 
 from scripts.src.config.loader import load_config
-from scripts.src.utils.logger import setup_logger, setup_file_logger, log_info, log_success, log_warning
+from scripts.src.utils.logger import setup_logger, setup_file_logger, log_info, log_success, log_warning, log_error
 from scripts.src.utils.storage import save_results
 from scripts.src.tools.web_scraper import WebScraperTool
 from scripts.src.tools.telegram_poster import TelegramPosterTool
@@ -19,13 +19,6 @@ from crewai import Agent, Task, Crew
 from scripts.src.utils.link_analyzer import analyze_link
 from scripts.src.utils.template_loader import template_loader
 import re
-
-# Add this import at the top
-from fastapi import FastAPI
-import litserve as ls
-
-
-logger = setup_logger('API')
 
 
 class SocialSummarizerAPI(ls.LitAPI):
@@ -78,13 +71,6 @@ class SocialSummarizerAPI(ls.LitAPI):
             # Initialize tools
             from scripts.src.tools.web_scraper import WebScraperTool
             web_scraper = WebScraperTool()
-            
-            tools = {}
-            agents = {}
-            writers = {}
-            hashtag_tasks = {}
-            social_tasks = {}
-            post_tasks = {}
             
             # Initialize researcher (always needed)
             from scripts.src.agents.researcher import create_researcher
@@ -186,7 +172,7 @@ class SocialSummarizerAPI(ls.LitAPI):
                 posted_to.append("twitter")
             
             # ===== LINKEDIN =====
-            if linkedin_enabled: #BUG
+            if linkedin_enabled:
                 from scripts.src.tools.linkedin_poster import LinkedInPosterTool
                 from scripts.src.agents.linkedin_poster import create_linkedin_poster
                 from scripts.src.tasks.linkedin import create_linkedin_task
@@ -201,7 +187,6 @@ class SocialSummarizerAPI(ls.LitAPI):
                 )
                 
                 linkedin_description = template_loader.load('linkedin_writer', source_url=url)
-                
                 linkedin_social_task = Task(
                     description=linkedin_description,
                     agent=linkedin_writer,
@@ -209,11 +194,20 @@ class SocialSummarizerAPI(ls.LitAPI):
                     context=[summarize_task, linkedin_hashtag_task]
                 )
                 
+                # Extract article info from URL
+                import urllib.parse
+                parsed_url = urllib.parse.urlparse(url)
+                article_title = parsed_url.path.split('/')[-1].replace('-', ' ').title()
+                article_description = f"Interesting article from {parsed_url.netloc}"
+                
                 linkedin_post_task = create_linkedin_task(
                     linkedin_agent,
                     [linkedin_social_task],
                     self.config['linkedin']['access_token'],
-                    self.config['linkedin']['author_urn']
+                    self.config['linkedin']['author_urn'],
+                    source_url=url,
+                    article_title=article_title,
+                    article_description=article_description
                 )
                 
                 all_agents.extend([linkedin_writer, linkedin_agent])
@@ -251,7 +245,6 @@ class SocialSummarizerAPI(ls.LitAPI):
             return output
             
         except Exception as e:
-            from scripts.src.utils.logger import log_error
             log_error(self.logger, f"Error processing URL: {str(e)}")
             return {
                 "url": url,
@@ -259,14 +252,15 @@ class SocialSummarizerAPI(ls.LitAPI):
                 "error": str(e),
                 "status": "failed"
             }
+    
     def encode_response(self, output):
         """Encode response for API"""
         return {
             "output": output, 
             "status": output.get("status", "success")
         }
-        
-        
+
+
 class EnhancementAPI(ls.LitAPI):
     
     def setup(self, device):

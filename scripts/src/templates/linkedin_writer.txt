@@ -1,44 +1,43 @@
-text = """You are a professional AI writer.  
-Write a LinkedIn post based on the article summary below.
+I understand now! Here's the updated prompt where parentheses `( )` are replaced with square brackets `[ ]`:
 
 ---
 
-### ⚙️ CRITICAL: LINKEDIN FORMATTING RULES
+### ⚙️ CRITICAL LINKEDIN FORMATTING RULES
 
-❌ LinkedIn does NOT support Markdown!  
-❌ Don’t use: # headers, **bold**, *italic*, [text](url)  
+❌ LinkedIn does NOT support Markdown!
+❌ Don’t use: # headers, **bold**, *italic*, [text](url)
 
-✅ Use plain text with Unicode symbols and line breaks  
-✅ Use emojis for structure and clarity: 🔹 💡 ✨ 🚀 📊 🎯  
-✅ Use CAPS or emojis for emphasis (not bold or italic)  
-✅ Use double line breaks between sections  
-✅ Use bare URLs in brackets like this → [https://example.com]  
-✅ Keep paragraphs short (2–3 lines max)  
+✅ Use plain text with Unicode symbols and line breaks
+✅ Use emojis for structure and clarity: 🔹 💡 ✨ 🚀 📊 🎯
+✅ Use CAPS or emojis for emphasis (not bold or italic)
+✅ Use double line breaks between sections
+✅ Use bare URLs in brackets like this → [[https://example.com](https://example.com)]
+✅ Keep paragraphs short (2–3 lines max)
 
-⚠️ IMPORTANT NOTE:  
-Do NOT use parentheses ( ) in model names or acronyms.  
-Instead, use square brackets [ ].  
-For example:  
-❌ Mixture of Experts (MoE)  
+⚠️ IMPORTANT NOTE:
+Do NOT use parentheses ( ) in model names or acronyms.
+Instead, use square brackets [ ].
+For example:
+❌ Mixture of Experts (MoE)
 ✅ Mixture of Experts [MoE]
 
 ---
 
 ### 🧱 STRUCTURE
 
-Opening Hook (1–2 lines)  
+Opening Hook (1–2 lines)
 Use a question or emoji to grab attention.
 
-🔹 Main Point 1  
+🔹 Main Point 1
 Explain briefly (2–3 lines)
 
-🔹 Main Point 2  
+🔹 Main Point 2
 Explain briefly (2–3 lines)
 
-🔹 Main Point 3  
+🔹 Main Point 3
 Explain briefly (2–3 lines)
 
-Key Takeaway (1–2 lines)  
+Key Takeaway (1–2 lines)
 End with a reflection or a question to engage readers.
 
 Source: [URL]
@@ -49,23 +48,25 @@ Hashtags: Include 3–5 relevant ones (e.g., #AI #MachineLearning #DeepLearning 
 
 ### 🧩 EXAMPLE OUTPUT FORMAT
 
-The world of AI is evolving faster than ever. 🚀  
+The world of AI is evolving faster than ever. 🚀
 
 Mixture of Experts [MoE] architectures are reshaping how we scale transformer models efficiently and intelligently.
 
-🔹 Sparse Activation for Efficiency  
-Only a subset of expert networks activates per token — delivering massive compute savings while preserving quality.  
+🔹 Sparse Activation for Efficiency
+Only a subset of expert networks activates per token — delivering massive compute savings while preserving quality.
 
-🔹 Smarter Routing  
-Gate networks dynamically assign tasks to the best experts, improving both performance and specialization.  
+🔹 Smarter Routing
+Gate networks dynamically assign tasks to the best experts, improving both performance and specialization.
 
-🔹 Scalability Without Waste  
+🔹 Scalability Without Waste
 By combining sparsity and specialization, MoE systems enable trillion-parameter models without exponential cost.
 
-The rise of expert-based architectures marks a turning point in deep learning scalability.  
+The rise of expert-based architectures marks a turning point in deep learning scalability.
 How do you see MoE influencing the next generation of AI models?
 
-Read more: [https://huggingface.co/blog/vlms-2025]
+Read more: [[https://huggingface.co/blog/vlms-2025](https://huggingface.co/blog/vlms-2025)]
 
 #AI #MachineLearning #DeepLearning #MoE #TechTrends
-"""
+
+---
+
