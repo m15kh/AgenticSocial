@@ -1,72 +1,98 @@
-I understand now! Here's the updated prompt where parentheses `( )` are replaced with square brackets `[ ]`:
+Write a professional LinkedIn post based on the summary.
 
----
+=== CRITICAL: LINKEDIN FORMATTING RULES ===
 
-### ⚙️ CRITICAL LINKEDIN FORMATTING RULES
-
-❌ LinkedIn does NOT support Markdown!
-❌ Don’t use: # headers, **bold**, *italic*, [text](url)
-
-✅ Use plain text with Unicode symbols and line breaks
-✅ Use emojis for structure and clarity: 🔹 💡 ✨ 🚀 📊 🎯
-✅ Use CAPS or emojis for emphasis (not bold or italic)
-✅ Use double line breaks between sections
-✅ Use bare URLs in brackets like this → [[https://example.com](https://example.com)]
-✅ Keep paragraphs short (2–3 lines max)
-
-⚠️ IMPORTANT NOTE:
+IMPORTANT NOTE:
 Do NOT use parentheses ( ) in model names or acronyms.
 Instead, use square brackets [ ].
 For example:
 ❌ Mixture of Experts (MoE)
 ✅ Mixture of Experts [MoE]
 
----
+❌ LinkedIn does NOT support Markdown!
+❌ Don't use: # headers, **bold**, *italic*, [text](url)
+✅ Use plain text with Unicode symbols and line breaks
 
-### 🧱 STRUCTURE
+=== LINKEDIN TEXT FORMATTING ===
+✅ Use emojis for visual breaks: 🔹 💡 ✨ 🚀 📊 🎯
+✅ Use line breaks (double newlines) to separate sections
+✅ Use CAPS or emojis for emphasis (not bold/italic)
+✅ Use BARE URLs without brackets - LinkedIn auto-detects them
+✅ Keep paragraphs SHORT (2-3 lines max)
+✅ Use square brackets for acronyms: [MoE] [LLM] [AI] instead of (MoE) (LLM) (AI)
 
-Opening Hook (1–2 lines)
-Use a question or emoji to grab attention.
+=== URL FORMATTING ===
+❌ WRONG: Read more: [https://example.com]
+❌ WRONG: Check out [this article](https://example.com)
+✅ CORRECT: Read more: https://example.com
+✅ CORRECT: Full article: https://example.com
+✅ CORRECT: Source: https://example.com
+
+=== STRUCTURE ===
+
+Opening Hook (1-2 lines)
+Use emoji or question to grab attention
 
 🔹 Main Point 1
-Explain briefly (2–3 lines)
+Short explanation (2-3 lines)
 
-🔹 Main Point 2
-Explain briefly (2–3 lines)
+🔹 Main Point 2  
+Short explanation (2-3 lines)
 
 🔹 Main Point 3
-Explain briefly (2–3 lines)
+Short explanation (2-3 lines)
 
-Key Takeaway (1–2 lines)
-End with a reflection or a question to engage readers.
+Key Takeaway (1-2 lines)
+What should people remember?
 
-Source: [URL]
+Read more: {source_url}
 
-Hashtags: Include 3–5 relevant ones (e.g., #AI #MachineLearning #DeepLearning #TechTrends #Innovation)
+#Hashtag1 #Hashtag2 #Hashtag3 #Hashtag4 #Hashtag5
 
----
+=== EXAMPLE (CORRECT FORMAT) ===
 
-### 🧩 EXAMPLE OUTPUT FORMAT
+The future of AI is changing faster than ever. 🚀
 
-The world of AI is evolving faster than ever. 🚀
+Vision Language Models are becoming the Swiss Army knife of AI - smaller, faster, and more powerful.
 
-Mixture of Experts [MoE] architectures are reshaping how we scale transformer models efficiently and intelligently.
+🔹 Any-to-Any Models
+New architectures like Chameleon and Qwen 2.5 Omni can seamlessly convert between text, images, and audio. No more siloed systems.
 
-🔹 Sparse Activation for Efficiency
-Only a subset of expert networks activates per token — delivering massive compute savings while preserving quality.
+🔹 Reasoning Capabilities  
+Models like QVQ-72B [Qwen Vision-Question] are showing human-like problem-solving skills. The gap between perception and reasoning is closing.
 
-🔹 Smarter Routing
-Gate networks dynamically assign tasks to the best experts, improving both performance and specialization.
+🔹 Specialized Tasks
+From object detection to video understanding, VLMs [Vision Language Models] are tackling real-world challenges with impressive accuracy.
 
-🔹 Scalability Without Waste
-By combining sparsity and specialization, MoE systems enable trillion-parameter models without exponential cost.
+The democratization of these capabilities through open-source is what excites me most. Access to cutting-edge AI is no longer limited to big tech.
 
-The rise of expert-based architectures marks a turning point in deep learning scalability.
-How do you see MoE influencing the next generation of AI models?
+What's your take on multimodal AI?
 
-Read more: [[https://huggingface.co/blog/vlms-2025](https://huggingface.co/blog/vlms-2025)]
+Full article: https://huggingface.co/blog/vlms-2025
 
-#AI #MachineLearning #DeepLearning #MoE #TechTrends
+#AI #MachineLearning #VisionLanguageModels #ArtificialIntelligence #TechTrends
 
----
+=== BAD EXAMPLES (Don't do this!) ===
 
+❌ # Vision Language Models in 2025 (markdown header)
+❌ The future of AI is **changing** rapidly (markdown bold)
+❌ Check out this [great article](https://example.com) (markdown link)
+❌ Read more: [https://example.com] (URL in brackets)
+❌ - Bullet point 1 (markdown bullets - use emojis instead)
+❌ Mixture of Experts (MoE) (parentheses - use [MoE] instead)
+❌ Vision Language Models (VLMs) (parentheses - use [VLMs] instead)
+
+=== YOUR TASK ===
+
+Write a LinkedIn post about the article summary:
+- Use 🔹 or other emojis for bullet points
+- Use double line breaks between sections
+- Keep paragraphs short (2-3 lines)
+- Put URL as BARE text: https://example.com (no brackets!)
+- Use square brackets for acronyms: [VLM] not (VLM)
+- NO markdown syntax at all
+- Add 3-5 relevant hashtags at the end
+- Professional but conversational tone
+- Include a question or call-to-action
+
+Source URL: {source_url}

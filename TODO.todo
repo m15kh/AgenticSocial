@@ -1,16 +1,20 @@
 phase1:
     Tasks:
         ✔ edit link change in linkedin when post @today @done (11/5/2025, 6:59:42 PM)
-        ☐ edit link for specific platform id
-        ☐ write text about  it and after opload it for a example hey this is very intersritn
+        ✔ edit bug link in linkedin @today @done (11/7/2025, 4:08:23 PM)
+        ✔ edit bug for twitter sent (sent that published in twittter is not very well formated) @today @done (11/7/2025, 4:08:27 PM)
+        when you just sent text in buggy way linkedin put wrong link so you must remtot
+        ☐ write text about  it and  after opload it for a example hey this is very intersritn edit text for twitter
         ☐ user in bot can select which platform must be sent (x, telegram, all?)
-        ☐ edit link for specific platform id
-
+        ☐ lunch in server just run when atleast 3 post sent and after kill process !
 
 #NOTE ready to pitch
 phase2:
     Tasks:
+        twitter text is not well so you must optimize for better text
+
         ☐ add debug mode to total code
+        ☐ edit link for specific platform id  for a exampel add id linkedin in twitter (but is better when get at least 50 members in each platform)
         ☐ sent persian and trasalte to english first
         ☐ pdf can analysis is very good
 
