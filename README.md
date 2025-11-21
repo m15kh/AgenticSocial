@@ -101,3 +101,8 @@ Contributions are welcome! Feel free to open issues or submit pull requests.
 
 - [CrewAI](https://github.com/crewai) for the agent-based framework
 - [LitServe](https://github.com/litserve) for the lightweight server framework
+
+
+curl http://localhost:8080/queue/status
+
+ python3 scripts/src/scheduler/processor.py --now

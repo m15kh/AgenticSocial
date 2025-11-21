@@ -5,7 +5,7 @@ phase1:
         ✔ edit bug for twitter sent (sent that published in twittter is not very well formated) @today @done (11/7/2025, 4:08:27 PM)
         when you just sent text in buggy way linkedin put wrong link so you must remtot
         ☐ write text about  it and  after opload it for a example hey this is very intersritn edit text for twitter
-        ☐ user in bot can select which platform must be sent (x, telegram, all?)
+        ✔ user in bot can select which platform must be sent (x, telegram, all?) @done (11/8/2025, 3:09:33 PM)
         ☐ lunch in server just run when atleast 3 post sent and after kill process !
 
 #NOTE ready to pitch
